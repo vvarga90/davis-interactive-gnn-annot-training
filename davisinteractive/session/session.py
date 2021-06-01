@@ -47,6 +47,7 @@ class DavisInteractiveSession:
             be stored during the evaluation. By default is the current working
             directory. A temporal file will be storing snapshots of the results
             on this same directory with a suffix `.tmp`.
+            !! EDIT: if None, not saving a report
     """
 
     def __init__(self,
@@ -63,8 +64,9 @@ class DavisInteractiveSession:
 
         self.subset = subset
         self.shuffle = shuffle
-        self.max_time = min(max_time,
-                            10 * 60) if max_time is not None else max_time
+        #self.max_time = min(max_time, 10 * 60) if max_time is not None else max_time   # DISABLED
+        self.max_time = max_time if max_time is not None else 2**30
+        
         self.max_nb_interactions = min(
             max_nb_interactions,
             16) if max_nb_interactions is not None else max_nb_interactions
@@ -87,11 +89,13 @@ class DavisInteractiveSession:
         self.sample_last_scribble = None
         self.interaction_start_time = None
 
-        self.report_save_dir = report_save_dir or os.getcwd()
-        self.report_save_dir = Path(self.report_save_dir)
-        # Crete the directory if does not exists
-        if not self.report_save_dir.exists():
-            self.report_save_dir.mkdir(parents=True)
+        #self.report_save_dir = report_save_dir or os.getcwd()
+        self.report_save_dir = report_save_dir
+        if self.report_save_dir is not None:
+            self.report_save_dir = Path(self.report_save_dir)
+            # Crete the directory if does not exists
+            if not self.report_save_dir.exists():
+                self.report_save_dir.mkdir(parents=True)
         self.report_name = 'result_%s' % datetime.now().strftime(
             '%Y%m%d_%H%M%S')
 
@@ -174,22 +178,23 @@ class DavisInteractiveSession:
             logging.info('Start evaluation for sequence %s' % seq)
 
         # Save report on final version if the evaluation ends
-        if end:
-            self.global_summary = self.connector.post_finish()
-            df = self.get_report()
-            report_filename = self.report_save_dir.joinpath(
-                '%s.csv' % self.report_name)
-            df.to_csv(report_filename)
-            # Remove the temporal file
-            tmp_report_filename = self.report_save_dir.joinpath(
-                '%s.tmp.csv' % self.report_name)
-            tmp_report_filename.unlink()
-            self.running = False
-        else:
-            df = self.get_report()
-            tmp_report_filename = self.report_save_dir.joinpath(
-                '%s.tmp.csv' % self.report_name)
-            df.to_csv(tmp_report_filename)
+        if self.report_save_dir is not None:
+            if end:
+                self.global_summary = self.connector.post_finish()
+                df = self.get_report()
+                report_filename = self.report_save_dir.joinpath(
+                    '%s.csv' % self.report_name)
+                df.to_csv(report_filename)
+                # Remove the temporal file
+                tmp_report_filename = self.report_save_dir.joinpath(
+                    '%s.tmp.csv' % self.report_name)
+                tmp_report_filename.unlink()
+                self.running = False
+            else:
+                df = self.get_report()
+                tmp_report_filename = self.report_save_dir.joinpath(
+                    '%s.tmp.csv' % self.report_name)
+                df.to_csv(tmp_report_filename)
 
         return not end
 

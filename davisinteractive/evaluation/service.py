@@ -189,16 +189,24 @@ class EvaluationService:
         gt_masks = self.davis.load_annotations(sequence)
         nb_objects = Davis.dataset[sequence]['num_objects']
 
-        jaccard = batched_jaccard(
-            gt_masks,
-            pred_masks,
-            average_over_objects=False,
-            nb_objects=nb_objects)
-        contour = batched_f_measure(
-            gt_masks,
-            pred_masks,
-            average_over_objects=False,
-            nb_objects=nb_objects)
+        # only compute the metrics actually used
+        if self.metric_to_optimize == 'J' or self.metric_to_optimize == 'J_AND_F':
+            jaccard = batched_jaccard(
+                gt_masks,
+                pred_masks,
+                average_over_objects=False,
+                nb_objects=nb_objects)
+        if self.metric_to_optimize == 'F' or self.metric_to_optimize == 'J_AND_F':
+            contour = batched_f_measure(
+                gt_masks,
+                pred_masks,
+                average_over_objects=False,
+                nb_objects=nb_objects)
+        if self.metric_to_optimize == 'J':
+            contour = jaccard   # dummy
+        if self.metric_to_optimize == 'F':
+            jaccard = contour   # dummy
+
         nb_frames, _ = jaccard.shape
 
         frames_idx = np.arange(nb_frames)

@@ -26,6 +26,7 @@ with Path(__file__).parent.joinpath('davis.json').open() as fp:
 _SETS = collections.defaultdict(list)
 for s in _DATASET['sequences'].values():
     _SETS[s['set']].append(s['name'])
+_SETS['train'] = _SETS['train0'] + _SETS['train1']   # EDIT: new line -> train0 is train-train, train1 is train-val
 _SETS['trainval'] = _SETS['train'] + _SETS['val']
 
 

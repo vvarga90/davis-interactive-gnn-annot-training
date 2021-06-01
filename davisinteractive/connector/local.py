@@ -16,7 +16,8 @@ class LocalConnector(AbstractConnector):
     """ Proxy class to run the EvaluationService locally.
     """
 
-    VALID_SUBSETS = ['train', 'val', 'trainval']
+    #VALID_SUBSETS = ['train', 'val', 'trainval']
+    VALID_SUBSETS = ['train', 'val', 'trainval', 'train0', 'train1']   # EDIT: train0 is train-train, train1 is train-val subset
 
     def __init__(self, user_key, session_key):
         self.service = None
